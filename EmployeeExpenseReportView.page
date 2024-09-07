@@ -1,0 +1,265 @@
+<!--
+    Diese Visualforce-Seite wird verwendet, um eine PDF-Ansicht der Spesenabrechnung zu generieren.
+    Sie verwendet eine Apex-Klasse als Controller, um die erforderlichen Daten zu erhalten.
+    Die Seite verwendet CSS-Stile, um das Aussehen der PDF zu definieren.
+-->
+<apex:page controller="EmpExpenseReport"  renderAs="pdf" showHeader="false" applyBodyTag="false" applyHtmlTag="false">
+<html>
+    <head>
+        <!-- CSS-Stile für das Aussehen der PDF -->
+        <style>
+            /*CSS-Eigenschaften für den Body der PDF anpassen */
+      body {
+            font-family: 'Montserrat', sans-serif;          /*Schriftart festlegen*/
+            font-size: 12px;                                /*Schriftgröße festlegen*/
+            width: 700px;                                   /*Breite des Bodys festlegen*/
+            height: 900px;                                  /*Höhe des Bodys festlegen*/
+        }
+
+        /*CSS-Eigenschaften für den Header-Container anpassen, 
+        der die Container für den Titel und das Logo beinhaltet*/
+        .header {
+            display: flex;                                  /*Festlegen des Containers als Flex-Container*/
+            justify-content: space-between;                 /*Ausrichten der Flex-Elemente in diesem Container*/ 
+            align-items: center;                            /* Zentrierung der Elemente vertikal */
+            width: 700px;                                   /*Breite des Header-Containers festlegen*/
+            height: 4%;                                     /*Höhe des Headers */
+            margin-top: -900px;                             /*Absatnd des Header-Containers zum Body-Anfang verringern*/
+            margin-bottom: 30px;                            /*Abstand des Header-Containers, zum nachfolgenden Element*/
+            border-bottom: 2px solid black;             /*Hinzufügen einer Trennlinie unterhalb des Header-Containers*/
+        }
+
+        /*CSS-Eigenschaften für den Titel-Container*/
+        .header-titel {
+            width: 30%;                                     /*Anpassung der Breite des Container */
+            height: 30px;                                   /*Apassung der Höhe des Containers*/
+            display: flex;                                  /*Festlegen des Containers als Flex-Container*/
+            align-items: center;                            /*Zentrierung des Inhalts vertikal */
+            font-size: 15px;                                /*Schriftgröße des Titels festlegen*/
+        }
+
+        /*CSS-Eigenschaften für den Container des Logos*/
+        .header-image {
+            width: 80%;                                     /*Anpassung der Breite des Containers für das Bild */
+            text-align: right;                              /*Ausrichtung des Textes, rechtsbündig*/
+            align-items: left;
+            margin-left: 531px;                             /*Seitenabstand nach links anpassen*/
+            margin-top: -44px;                              /*Abstand nach oben verringern*/
+        }
+
+        /*CSS-Eigenschaften für den Container des Logos*/
+        .header-image img {
+            height: 30px;                                   /*Höhe des Containers anpassen*/
+            width: 160px;                                   /*Breite des Containers anpassen*/
+            padding-right: 3px;                             /*Inhalt des Container nach recht verschieben*/
+        }
+
+        /*CSS-Eigenschaften für den Übergeordneten-Container eines Bereichs, 
+        der die Container Links und Rechs beinhaltet*/
+        .parent-container{
+            margin-top: 20px;                               /*Abstand nach Oben anpassen*/
+            margin-bottom: -25px;                           /*Abstand nach unten anpassen*/
+        }
+
+        /*CSS-Eigemschaften für den Linken-Container*/
+        .left-container{
+            width: 25%;                                     /*Breite des Containers anpassen*/
+        }
+
+        /*CSS_Eigemschaften für den Rechten-Container apassen*/
+        .right-container{
+            width: 25%;                                     /*Breite des Containers festlegen*/
+            margin-left: 350px;                             /*Abstand nach links festlegen*/
+            margin-top: -29px;                              /*Abstand nach Oben verringern*/
+        }
+
+        /*CSS-Eigenschaften für den Abschnitt anpassen*/
+        .section {
+            padding-bottom: 10px;                           /*Abstand des Inhaltes im Container nach unten anpassen*/
+            margin-bottom: 30px;                            /*Abstand des Containers nach Unten anpassen*/
+            height: 6%;                                     /*Höhe des Containers anpassen*/
+        }
+
+        /*CSS-Eigenschften für den Linien-Container*/
+        .underline{
+            border-bottom: 1px solid #0f828b;           /*Festlegen einer Trennlinie mit Stärke und Farbe*/
+            margin-top: 20px;                               /*Abstand nach Oben festlegen*/
+        }
+
+        /*CSS-Eigenschaften für unter Container des Abschnitts*/
+        .section h3, .section-table h3, .section-checklist h3 {
+            color: #0f828b;                             /*Festlegen der  Schriftfarbe*/ 
+        }
+
+        /*CSS-Eigenschaften für den Tabellen-Container*/
+        .section-table{
+            margin-top: 20px;                               /*Abstand nach Oben anpassen*/
+            height: 40%;                                    /*Höhe des Containers festlegen*/
+        }
+
+        /*CSS-Eigenschaften für die Tabelle*/
+        table {
+            border-collapse: collapse;                      /*Zusammenführen der Tabellenzellenränder*/
+            margin-bottom: 20px;                            /*Abstand nach Unten anpassen*/
+            font-size: 10px;                                /*Schriftgröße festlegen*/
+            width: 100%;                                    /*Breite der Tabelle festlegen*/
+            height: 100%;                                   /*Höhe der Tabelle festlegen*/
+        }
+
+        /*CSS-Eigenschaften für den Tabellen-Kopf*/
+        .table-head{
+            border-bottom: 1px solid black;             /*Hinzufügen einer Schwarzen Trennlinie*/
+        }
+
+        .table-size{
+            height: 10%;
+        }
+
+        /*CSS-Eigenschaften für den Tabellenkopf, 
+        der Tabellendaten und der Tabellenzeilen*/
+        th, td, tr{
+            height: 2%;                                     /*Anpassen der Höhe*/
+            padding: 8px;                                   /*Innenabstand anpassem*/
+            text-align: left;                               /*Ausrichten des Textes nach links*/
+        }
+
+        /*CSS-Eigenschaften für die Tabellendaten*/
+        .table-data{
+            text-align: right;                              /*Aurichtung des Textes nach rechts*/
+            height: 10%;                                    /*Anpassen der Höhe*/
+        }
+
+        tr:nth-child(even) {
+            background-color: #0f828b;
+        }
+
+        /*CSS-Eigenschaften für den Bereich Erstattung*/
+        .erstattung{
+            margin-left: 585px;                             /*Abstand nach links anpassen*/
+            margin-top: -50px;                              /*Abstand nach Oben anpassen*/
+            font-size: 12px;                                /*Schriftgröße anpassen*/
+            height: 1%;                                     /*Höhe anpassen*/
+        }
+
+        /*CSS-Eigeschaften für den Hinweis bei der Checkliste*/
+        .achtung{
+            font-size: 10px;                                /*Schriftgröße anpasen*/
+            color: red;                                 /*Schriftfarebe anpassen*/
+            margin-left: 80px;                              /*Abstand nach links festlegen*/
+            margin-top: -25px;                              /*Abstand nach Oben festlegen*/
+        }
+
+        /*CSS-Eigenschaften für den Vereich der Checkliste*/
+        .section-checklist{
+            height: 16%;                                    /*Anpassen der Höhe*/
+            margin-top: 60px;                               /*Anpassen des Abstands nach Oben*/
+        }
+
+        /*CSS-Eigenschaften für die Checkliste*/
+        .checklist {
+            display: flex;                                  /*Festlegen des Containers als Flex-Container*/
+            flex-direction: column;                         /*Anordnung des Inhalts des Containers*/
+            align-items: flex-start;                        /*Ausrichtung der Elemente vertikal*/
+            margin-bottom: 20px;                            /*Abstand nach Unten festlegen*/
+            height: 2%;                                     /*Anpassen der Höhe*/
+        }
+
+        /*CSS-Eigenschaften für die Elemente im Checklisten-Container*/
+        .checklist .item {
+            margin-bottom: 10px;                            /*Abstand nach unten festlegen*/
+            display: flex;                                  /*Festlegen des Containers als Flex-Container*/
+            align-items: center;                            /* Zentrierung der Elemente vertikal */
+            height: 2%;                                     /*Anpassen der Höhe*/
+        }
+        
+        /*CSS_Eigeschaften für den Übergeordneten-Container 
+        für die Unterschrift, Datum und Ort*/
+        .city-signature{
+            margin-bottom: 2px;                             /*Abstand nach unten Anpassen*/
+            margin-top: 40px;                               /*Abstand nach Oben Anpassen*/
+            margin-left: 1px;                               /*Abstand nach links Anpassen*/
+            height: 5%;                                     /*Anpassen der Höhe*/
+            width: 700px;                                   /*Anpassen der Breite*/
+        }
+
+        /*CSS-Eigeschaften für den Datums- und Ort-Containers*/
+        .city{
+            width: 50%;                                     /*Anpassen der Breite*/
+        }
+        /*CSS-Eigenschaften für den Unterschrifts-Container*/
+        .signature{
+            width: 50%;                                     /*Anpassen der Breite*/
+            margin-left: 349px;                             /*Abstand nach links Anpassen*/
+            margin-top: -27px;                              /*Abstamd nach Oben Anpassen*/
+            padding-left: 1px;                              /*Abstand des Inhaltes im Container nach links festlegen*/
+        }
+        /*CSS-Eigenschaften für den Container der Checkboxen*/
+        .box{
+            border-left: 1px solid black;               /*Schwarze Trennlinie links hinzufügen*/
+            border-right: 1px solid black;              /*Schwarze Trennlinie rechts hinzufügen*/
+            border-top: 1px solid black;                /*Schwarze Trennlinie Oben hinzufügen*/
+            border-bottom: 1px solid black;             /*Schwarze Trennlinie Unten hinzufügen*/
+            width: 9px;                                     /*Anpassen der Breite*/
+            height: 9px;                                    /*Anpassen der Höhe*/
+            margin-top: 40px;                               /*Abstand nach Oben festlegen*/
+        }
+        /*CSS-Eigenschaften für den Container 
+        der die Checkboxen und Fragen beinhaltet*/
+        .item{
+            margin-top: -15px;                              /*Abstand nach oben verringern*/
+        }
+        /*CSS-Eigenschaften für die Fragen der Checkliste*/
+        .content{
+            width: 55%;                                     /*Anpassen der Breite*/
+            margin-left: 30px;                              /*Abstand nach links festlegen*/
+            margin-top: -12px;                              /*Abstand nach Oben verringern*/
+        }
+       /*CSS-Eigeschaften für den Footer*/
+        .footer {
+            padding-bottom: 10px;                           /*Abstand des Inhaltes im Container nach unten festlegen**/
+            margin-bottom: 5px;                             /*Abstand des Containers nach Unten festlegen*/ 
+            display: flex;                                  /*Festlegen des Containers als Flex-Container*/
+            justify-content: space-between;                 /*Ausrichten der Flex-Elemente in diesem Container*/ 
+            align-items: center;                            /* Zentrierung der Elemente vertikal */
+            font-size: 12px;                                /*Schriftgröße festlegen*/ 
+            height: 1%;                                     /*Anpassen der Höhe*/
+            width: 700px;                                   /*Anpassen der Breite*/
+            border-top: 2px solid black;                /*Schwarze Trennlinie Oben hinzufügen*/
+            margin-top: 5px;                                /*Abstand nach Unten festlegen*/ 
+            padding-left: 2px;                              /*Abstand des Inhaltes im Container nach links festlegen*/
+            margin-left: 7px;                               /*Abstand nach links festlegen*/
+            position: fixed;                                /*Relative Ausrichtung des Elementes zum Browserfenster*/
+            bottom: 0;                                      /*Positionierung des Elemetes am unteren Rand*/
+        }
+
+        /*CSS-Eigenschaften für das Copyright*/
+        .copyright{
+            margin-top: 5px;                                /*Abstand nach Oben festlegen*/
+        }
+
+                </style>
+            </head>
+            <body>
+                <!-- Apex-Komponente einbinden und Attribute übergeben -->
+                <c:EmpExpenseReportComponent  
+                    reportName="{!reportName}" 
+                    employee="{!employee}" 
+                    startDate="{!startDate}"  
+                    endDate="{!endDate}" 
+                    totalreimbursement="{!totalReimbursement}" 
+                    checkQuestion1="{!checkQuestion1}" 
+                    checkQuestion2="{!checkQuestion2}" 
+                    checkQuestion3="{!checkQuestion3}" 
+                    checkQuestion4="{!checkQuestion4}"
+                    curCity="{!curCity}" 
+                    now="{!now}" 
+                    company="{!company}" 
+                    actualYear="{!actualYear}" 
+                    relatedStrings="{!relatedStrings}" 
+                    isEvenRow="{!isEvenRow}"
+                    warning="{!warning}"  
+                 />
+
+            </body>
+               </html> 
+    </apex:page>

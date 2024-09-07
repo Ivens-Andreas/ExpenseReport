@@ -1,0 +1,139 @@
+<!-- 
+    Diese Apex-Komponente wird verwendet, um HTML-Inhalte für eine Spesenabrechnung zu generieren.
+    Die Komponente verwendet verschiedene Attribute, um Daten dynamisch in die HTML-Vorlage einzufügen.
+    Die generierte HTML-Seite enthält Informationen wie Abrechnungsdaten, Abrechnungszeitraum, Spesentabelle,
+    manuelle Checkliste, Ort und Datum, Unterschrift des Mitarbeiters und einen Footer.
+-->
+<apex:component >
+    <!-- Attribute, die für die HTML-Page benötigt werden -->
+    <apex:attribute name="reportName" type="String" required="true" description=""/>
+    <apex:attribute name="employee" type="String" required="true" description=""/>
+    <apex:attribute name="startDate" type="String" required="true" description=""/>
+    <apex:attribute name="endDate" type="String" required="true" description=""/>
+    <apex:attribute name="totalReimbursement" type="String" required="true" description=""/>
+    <apex:attribute name="checkQuestion1" type="String" required="true" description=""/>
+    <apex:attribute name="checkQuestion2" type="String" required="true" description=""/>
+    <apex:attribute name="checkQuestion3" type="String" required="true" description=""/>
+    <apex:attribute name="checkQuestion4" type="String" required="true" description=""/>
+    <apex:attribute name="curCity" type="String" required="true" description=""/>
+    <apex:attribute name="now" type="String" required="true" description=""/>
+    <apex:attribute name="company" type="String" required="true" description=""/>
+    <apex:attribute name="actualYear" type="String" required="true" description=""/>
+    <apex:attribute name="relatedStrings" type="EmpExpenseReportHelper[]" required="true" description="List of expenses"/>
+    <apex:attribute name="isEvenRow" type="boolean" required="true" description=""/>
+    <apex:attribute name="warning" type="String" required="true" description=""/>
+   
+    <!-- Kopfbereich der PDF, mit Titel und Logo -->
+    <body class="body">
+        <div class="header">
+            <div class="header-titel">
+                <h2>Spesenabrechnung</h2>
+                <div class="header-image">
+                    <apex:image id="im"  url="{!$Resource.aq_logo}"/>
+                </div>
+            </div>
+        </div>
+        <!-- Bereich für die Abrechnungsdaten, wie Abrechnungsnummer und Mitarbeiter -->
+        <div class="section">
+            <h3>Abrechnungsdaten</h3>
+            <div class="underline"></div>
+            <div class="parent-container">
+                <div class="left-container">
+                    <p>Abrechnungsnummer:<b> <apex:outputText value=" " />&nbsp;{!reportName}</b> </p>
+                </div>
+                <div class="right-container">
+                    <p>Mitarbeiter:<b> <apex:outputText value=" " />&nbsp;{!employee}</b></p> 
+                </div>
+            </div>
+        </div>
+        <!-- Bereich für den Abrechnungszeitraum mit Start- und Enddatum -->
+        <div class="section">
+            <h3>Abrechnungszeitraum</h3>
+            <div class="underline"></div>
+            <div class="parent-container">
+                <div class="left-container">
+                    <p>Abrechnung vom:<b> <apex:outputText value=" " />&nbsp;{!startDate}</b></p> 
+                </div>
+                <div class="right-container">
+                    <p>Bis zum:<b><apex:outputText value=" " />&nbsp;{!endDate}</b></p>  
+                </div>
+            </div>
+        </div>
+        <!-- Bereich für die Tabelle der Spesen des Mitarbeiters, die in dem Angegebenen Zeitraum angefallen sind. -->
+        <div class="section-table">
+            <h3>Spesen</h3>
+            <div class="underline"></div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th class="table-head" >Expense</th>
+                            <th class="table-head" >Datum</th>
+                            <th class="table-head" >Projekt</th>
+                            <th class="table-head" >Typ</th> 
+                            <th class="table-head" >Grund</th>
+                            <th class="table-head" >Ausgaben <br>(netto)</br></th>
+                            <th class="table-head" >Erstattung <br>(brutto)</br></th>
+                        </tr>
+                    </thead>
+                    <!-- Wiederholung für jede Ausgabe -->
+                    <apex:repeat var="first" value="{!relatedStrings}">
+                        <tr class="table-size" style="background-color: {!IF(isEvenRow, '#e3e3e3', '')}">
+                            <td>{!first.expenseName} </td>
+                            <td>{!first.expenseDate} </td>
+                            <td>{!first.project} </td>
+                            <td>{!first.type} </td> 
+                            <td>{!first.reason} </td>
+                            <td class="table-data">{!first.charge} €</td>
+                            <td class="table-data">{!first.reimbursement} €</td>
+                        </tr>
+                        <apex:variable var="isEvenRow" value="{!NOT isEvenRow}" />
+                    </apex:repeat>
+                </table>
+                 <!-- Gesamterstattungsbetrag -->
+                <div>
+                    <div class="erstattung"><b>Erstattung: {!totalReimbursement} €</b></div>
+                </div>
+        </div>
+        <!-- Bereich für die manuelle Checkliste, mit den dazu gehörigen Fragen -->
+        <div class="section-checklist" id="125s">
+            <h3>Checkliste</h3>
+            <div class="achtung"> {!warning}</div>
+            <div class="underline"></div>
+            <div class="checklist">
+                <!-- Fragen der Checkliste -->
+                <div class="item">
+                    <div class="box"></div>
+                    <div class="content">{!checkQuestion1}</div>
+                </div>
+                <div class="item">
+                    <div class="box"></div>
+                    <div class="content">{!checkQuestion2}</div>
+                </div>
+                <div class="item">
+                    <div class="box"></div>
+                    <div class="content">{!checkQuestion3}</div>
+                </div>
+                <div class="item">
+                    <div class="box"></div>
+                    <div class="content">{!checkQuestion4}</div>
+                </div>
+            </div>
+        </div>
+        <div class="underline"></div>
+        <!-- Bereich für den automatisch generierten Ort & das das Datum, sowie die Unterschrift des Mitarbeiters-->
+        <div class="bottom-section">
+            <div class="city-signature">
+                <div class="city"> 
+                    <p>{!curCity} den, {!now}</p>
+                </div>
+                <div class="signature">
+                    <p>Unterschrift:___________________________________________</p>
+                </div>
+            </div>
+        </div>
+        <!-- Footer -->
+        <div class="footer">
+            <div class="copyright">&copy; {!company} {!actualYear}</div>
+        </div>
+    </body>
+</apex:component>
